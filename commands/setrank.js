@@ -1,11 +1,11 @@
 const fs = require('fs');
-const ALLOWED_USERS = ['533339674173767682', '810198568845049886', '527630883084173321']; // Authorized users
+const ALLOWED_USERS = ['533339674173767682', '810198568845049886'];
 
 module.exports = {
   name: 'setrank',
   description: 'Sets a user to a mentioned role without hierarchy restrictions',
   async execute(message, args) {
-    // Debug logs to check author ID and permission check
+    
     console.log('Author ID:', message.author.id);
     console.log('Allowed Users:', ALLOWED_USERS);
     console.log('Is Allowed:', ALLOWED_USERS.map(id => id.trim()).includes(message.author.id.trim()));
