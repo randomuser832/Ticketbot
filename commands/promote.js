@@ -1,5 +1,5 @@
 const fs = require('fs');
-const ALLOWED_USERS = ['533339674173767682', '810198568845049886']; // Replace with actual Discord user IDs allowed
+const ALLOWED_USERS = ['533339674173767682', '810198568845049886','527630883084173321']; // Replace with actual Discord user IDs allowed
 
 module.exports = {
   name: 'promote',
