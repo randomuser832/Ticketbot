@@ -1,11 +1,12 @@
 const fs = require('fs');
-const LOG_PATH = './data/promotions.json';
+const ALLOWED_USERS = ['533339674173767682', '810198568845049886']; // Replace with actual Discord user IDs allowed
 
 module.exports = {
   name: 'promote',
   description: 'Promotes a user to the next role in the scout hierarchy',
   async execute(message, args) {
-    if (!message.member.permissions.has('ManageRoles')) return message.reply('❌ You do not have permission.');
+    if (!ALLOWED_USERS.includes(message.author.id))
+      return message.reply('❌ You are not authorized to use this command.');
 
     const user = message.mentions.members.first();
     if (!user) return message.reply('❌ Mention a user to promote.');
@@ -25,14 +26,15 @@ module.exports = {
       return logAction('promote', message.author.tag, user.user.tag, null, role.id);
     }
 
-    if (currentIndex === roles.length - 1) return message.reply('⚠️ User is already at the highest role.');
+    if (currentIndex === roles.length - 1) 
+      return message.reply('⚠️ User is already at the highest role.');
 
-    const next = message.guild.roles.cache.get(roles[currentIndex + 1]);
-    if (!next) return message.reply('❌ Next role not found.');
+    const nextRole = message.guild.roles.cache.get(roles[currentIndex + 1]);
+    if (!nextRole) return message.reply('❌ Next role not found.');
     await user.roles.remove(roles[currentIndex]);
-    await user.roles.add(next);
-    message.reply(`✅ Promoted ${user} to **${next.name}**.`);
-    logAction('promote', message.author.tag, user.user.tag, roles[currentIndex], next.id);
+    await user.roles.add(nextRole);
+    message.reply(`✅ Promoted ${user} to **${nextRole.name}**.`);
+    logAction('promote', message.author.tag, user.user.tag, roles[currentIndex], nextRole.id);
   }
 };
 

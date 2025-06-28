@@ -1,11 +1,12 @@
 const fs = require('fs');
-const LOG_PATH = './data/promotions.json';
+const ALLOWED_USERS = ['533339674173767682', '810198568845049886']; // Replace with actual Discord user IDs allowed
 
 module.exports = {
   name: 'setrank',
   description: 'Sets a user to a specific rank in the hierarchy',
   async execute(message, args) {
-    if (!message.member.permissions.has('ManageRoles')) return message.reply('❌ You do not have permission.');
+    if (!ALLOWED_USERS.includes(message.author.id))
+      return message.reply('❌ You are not authorized to use this command.');
 
     const user = message.mentions.members.first();
     if (!user) return message.reply('❌ Mention a user.');
@@ -21,7 +22,9 @@ module.exports = {
     const role = message.guild.roles.cache.find(r => r.name.toLowerCase() === roleName.toLowerCase());
     if (!role || !roles.includes(role.id)) return message.reply('❌ Role not found or not part of hierarchy.');
 
-    for (const id of roles) if (user.roles.cache.has(id)) await user.roles.remove(id);
+    for (const id of roles) {
+      if (user.roles.cache.has(id)) await user.roles.remove(id);
+    }
     await user.roles.add(role);
     message.reply(`✅ Set ${user} to **${role.name}**.`);
     logAction('setrank', message.author.tag, user.user.tag, null, role.id);
