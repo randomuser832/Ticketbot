@@ -1,62 +1,29 @@
-const {
-  SlashCommandBuilder,
-  EmbedBuilder,
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-} = require('discord.js');
+client.on('interactionCreate', async interaction => {
+  if (!interaction.isButton()) return;
 
-const RSVP_STORAGE = new Map(); // In-memory, replace with file/db if needed
+  const [type, eventId] = interaction.customId.split('_');
+  const event = RSVP_STORAGE.get(eventId);
+  if (!event) return interaction.reply({ content: '⚠️ Event not found or expired.', ephemeral: true });
 
-module.exports = {
-  data: new SlashCommandBuilder()
-    .setName('event')
-    .setDescription('Create an event with RSVP options')
-    .addStringOption(option =>
-      option.setName('name').setDescription('Event name').setRequired(true))
-    .addStringOption(option =>
-      option.setName('description').setDescription('Event description').setRequired(true))
-    .addStringOption(option =>
-      option.setName('date').setDescription('Date (e.g. June 30, 2025)').setRequired(true))
-    .addStringOption(option =>
-      option.setName('time').setDescription('Time (e.g. 5:00 PM EST)').setRequired(true)),
+  const userId = interaction.user.id;
+  const userTag = interaction.user.tag;
 
-  async execute(interaction) {
-    const name = interaction.options.getString('name');
-    const description = interaction.options.getString('description');
-    const date = interaction.options.getString('date');
-    const time = interaction.options.getString('time');
+  // Remove from all RSVP categories first
+  for (const key of ['attending', 'maybe', 'declined']) {
+    const index = event[key].indexOf(userTag);
+    if (index !== -1) event[key].splice(index, 1);
+  }
 
-    const eventId = `${interaction.channel.id}-${Date.now()}`;
-    RSVP_STORAGE.set(eventId, { attending: [], maybe: [], declined: [] });
+  // Add to the selected category
+  event[type].push(userTag);
 
-    const embed = new EmbedBuilder()
-      .setTitle(`📅 ${name}`)
-      .setDescription(description)
-      .addFields(
-        { name: '📆 Date', value: date, inline: true },
-        { name: '⏰ Time', value: time, inline: true },
-        { name: '✅ Attending', value: 'No one yet', inline: false }
-      )
-      .setColor('Blue')
-      .setFooter({ text: 'RSVP by clicking a button below!' })
-      .setTimestamp();
+  // Update embed
+  const embed = EmbedBuilder.from(interaction.message.embeds[0]);
+  embed.spliceFields(2, 1, {
+    name: '✅ Attending',
+    value: event.attending.length ? event.attending.join('\n') : 'No one yet',
+    inline: false
+  });
 
-    const row = new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setCustomId(`attending_${eventId}`)
-        .setLabel('✅ Attend')
-        .setStyle(ButtonStyle.Success),
-      new ButtonBuilder()
-        .setCustomId(`maybe_${eventId}`)
-        .setLabel('🤔 Maybe')
-        .setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder()
-        .setCustomId(`decline_${eventId}`)
-        .setLabel('❌ Decline')
-        .setStyle(ButtonStyle.Danger)
-    );
-
-    await interaction.reply({ embeds: [embed], components: [row] });
-  },
-};
+  await interaction.update({ embeds: [embed] });
+});
