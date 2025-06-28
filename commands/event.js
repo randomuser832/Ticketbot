@@ -1,27 +1,17 @@
-const {
-  EmbedBuilder,
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle
-} = require('discord.js');
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
-const RSVP_STORAGE = new Map(); // You can replace this with a JSON/db if you want to persist
+const RSVP_STORAGE = new Map(); // In-memory event storage
 
 module.exports = {
   name: 'event',
-  description: 'Create an event with RSVP buttons',
-  async execute(message, args) {
-    if (!message.member.permissions.has('ManageEvents') && !message.member.permissions.has('Administrator')) {
-      return message.reply('❌ You do not have permission to create events.');
+  description: 'Creates an event and allows users to RSVP',
+  async execute(message, args, client) {
+    if (args.length < 4) {
+      return message.reply('❌ Usage: `!event "Name" "Description" "Date" "Time"`');
     }
 
-    const content = args.join(' ').split('|').map(x => x.trim());
+    const [name, description, date, time] = args;
 
-    if (content.length < 4) {
-      return message.reply('❌ Usage: `!event [name] | [description] | [date] | [time]`\nExample: `!event Game Night | Fun games and laughs | July 1, 2025 | 6:00 PM EST`');
-    }
-
-    const [name, description, date, time] = content;
     const eventId = `${message.channel.id}-${Date.now()}`;
     RSVP_STORAGE.set(eventId, { attending: [], maybe: [], declined: [] });
 
@@ -34,7 +24,7 @@ module.exports = {
         { name: '✅ Attending', value: 'No one yet', inline: false }
       )
       .setColor('Blue')
-      .setFooter({ text: 'RSVP by clicking a button below!' })
+      .setFooter({ text: 'Click a button below to RSVP' })
       .setTimestamp();
 
     const row = new ActionRowBuilder().addComponents(
@@ -53,5 +43,8 @@ module.exports = {
     );
 
     await message.channel.send({ embeds: [embed], components: [row] });
+
+    // Attach listener to interaction handler (from index.js)
+    if (!client.rsvpStorage) client.rsvpStorage = RSVP_STORAGE;
   }
 };
