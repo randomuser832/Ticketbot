@@ -1,11 +1,15 @@
 const fs = require('fs');
-const ALLOWED_USERS = ['533339674173767682', '810198568845049886','527630883084173321']; // Replace with actual Discord user IDs allowed
+const ALLOWED_USERS = ['533339674173767682', '810198568845049886', '527630883084173321']; // Allowed users
 
 module.exports = {
   name: 'promote',
   description: 'Promotes a user to the next role in the scout hierarchy',
   async execute(message, args) {
-    if (!ALLOWED_USERS.includes(message.author.id))
+    console.log('Author ID:', message.author.id);
+    console.log('Allowed Users:', ALLOWED_USERS);
+    console.log('Is Allowed:', ALLOWED_USERS.map(id => id.trim()).includes(message.author.id.trim()));
+
+    if (!ALLOWED_USERS.map(id => id.trim()).includes(message.author.id.trim()))
       return message.reply('❌ You are not authorized to use this command.');
 
     const user = message.mentions.members.first();

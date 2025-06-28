@@ -5,7 +5,12 @@ module.exports = {
   name: 'setrank',
   description: 'Sets a user to a mentioned role without hierarchy restrictions',
   async execute(message, args) {
-    if (!ALLOWED_USERS.includes(message.author.id))
+    // Debug logs to check author ID and permission check
+    console.log('Author ID:', message.author.id);
+    console.log('Allowed Users:', ALLOWED_USERS);
+    console.log('Is Allowed:', ALLOWED_USERS.map(id => id.trim()).includes(message.author.id.trim()));
+
+    if (!ALLOWED_USERS.map(id => id.trim()).includes(message.author.id.trim()))
       return message.reply('❌ You are not authorized to use this command.');
 
     const mentions = message.mentions.members;
@@ -17,12 +22,10 @@ module.exports = {
     const targetUser = mentions.first();
     const targetRole = rolesMentioned.first();
 
-    // Optional: Remove the target role first if user already has it (to avoid error)
     if (targetUser.roles.cache.has(targetRole.id)) {
       await targetUser.roles.remove(targetRole);
     }
 
-    // Add the new role
     await targetUser.roles.add(targetRole);
 
     message.reply(`✅ Set ${targetUser} to **${targetRole.name}**.`);
